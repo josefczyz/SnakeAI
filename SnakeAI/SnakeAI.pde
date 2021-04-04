@@ -13,15 +13,19 @@ boolean replayBest = true;  //shows only the best of each generation
 boolean seeVision = false;  //see the snakes vision
 boolean modelLoaded = false;
 
-boolean showAnimation = false; //false for computing only mode
-int numOfGen = 50; //how many generations will be computed
+boolean showAnimation = false; //false for computing only mode - must set to true for human play,model show and orginal AI computing
+int numOfGen = 20; //how many generations will be computed
 int numOfSnakes = 2000 ; //how many snajes will one generation contain
-int iteration = 20; //how many calculation of given topology should be made
+int iteration = 5; //how many calculation of given topology should be made
+ArrayList<Integer> scores; //score of each generation in evolution
+ArrayList<Integer> runTimes; //list of each evolution calculations times
+
 
 PFont font;
 
 ArrayList<Integer> evolution;
 int nrun;  //counter of calculation
+int lastRuntime; //how long takes last previous evolution calculation
 
 Button graphButton;
 Button loadButton;
@@ -49,6 +53,9 @@ void setup() {
   increaseMut = new Button(340,85,20,20,"+");
   decreaseMut = new Button(365,85,20,20,"-");
   nrun = 1;
+  lastRuntime = 0;
+  scores = new ArrayList<Integer>();
+  runTimes = new ArrayList<Integer>();
   if (showAnimation) {
   frameRate(fps);
   } else {
@@ -62,21 +69,27 @@ void setup() {
 }
 
 void draw() {
-  if(pop.gen > numOfGen) {
-    int runtime = millis();  //how long takes calculation of one evolution
+  if(!showAnimation) {
+  if(pop.gen > numOfGen-1) {
+    int runtime = millis() - lastRuntime;  //how long takes calculation of one evolution
+    runTimes.add(runtime);
     String path = "data/T"+hidden_layers+"x"+hidden_nodes+"m"+int(mutationRate*100)+"G"+numOfGen+"R"+nrun+"bestSnake.csv";
     saveModel(path);
     path = "data/T"+hidden_layers+"x"+hidden_nodes+"m"+int(mutationRate*100)+"G"+numOfGen+"R"+nrun+"scores.csv";
     saveScore(path,runtime);
     nrun += 1;
+    lastRuntime += runtime;
     if(nrun > iteration) {
+      path = "data/T"+hidden_layers+"x"+hidden_nodes+"m"+int(mutationRate*100)+"G"+numOfGen+"allscores.csv";
+      saveScoresTable(path);
     exit();
     } else {
     pop = new Population(numOfSnakes);
     evolution = new ArrayList<Integer>();
     highscore = 0;
   }
-  } 
+  }
+  }
   background(0);
   noFill();
   stroke(255);
@@ -240,11 +253,35 @@ Table scoreTable = new Table();
        firstRow.setInt("runtime", runTime);
     for(int i=0; i<evolution.size(); i++) {
       int newscore = evolution.get(i);
+      scores.add(newscore);
        TableRow newRow = scoreTable.addRow();
        newRow.setInt("generation", i+1);
        newRow.setInt("score", newscore);
     }
     saveTable(scoreTable, path);
+  }
+  
+void saveScoresTable(String path) {
+Table scoresTable = new Table();
+    scoresTable.addColumn("generation");
+    for(int i=1; i<iteration+1; i++) {
+    scoresTable.addColumn("score"+i);  
+    }
+       TableRow firstRow = scoresTable.addRow();
+       firstRow.setInt("generation", 0);
+       for(int i=1; i<runTimes.size()+1; i++) {
+       firstRow.setInt("score"+i,runTimes.get(i-1));
+       }
+       
+    for(int i=0; i<numOfGen; i++) {
+      TableRow newRow = scoresTable.addRow();
+      newRow.setInt("generation",i+1);
+      for(int j=0; j<iteration; j++){
+      int newscore = scores.get(j*numOfGen+i);
+      newRow.setInt("score"+(j+1), newscore);
+      }
+    }
+    saveTable(scoresTable, path);
   }
 
 
