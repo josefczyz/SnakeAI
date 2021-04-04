@@ -13,9 +13,15 @@ boolean replayBest = true;  //shows only the best of each generation
 boolean seeVision = false;  //see the snakes vision
 boolean modelLoaded = false;
 
+boolean showAnimation = false; //false for computing only mode
+int numOfGen = 50; //how many generations will be computed
+int numOfSnakes = 2000 ; //how many snajes will one generation contain
+int iteration = 20; //how many calculation of given topology should be made
+
 PFont font;
 
 ArrayList<Integer> evolution;
+int nrun;  //counter of calculation
 
 Button graphButton;
 Button loadButton;
@@ -42,15 +48,35 @@ void setup() {
   saveButton = new Button(149,15,100,30,"Save");
   increaseMut = new Button(340,85,20,20,"+");
   decreaseMut = new Button(365,85,20,20,"-");
+  nrun = 1;
+  if (showAnimation) {
   frameRate(fps);
+  } else {
+  frameRate(10000);
+  }
   if(humanPlaying) {
     snake = new Snake();
   } else {
-    pop = new Population(2000); //adjust size of population
+    pop = new Population(numOfSnakes); //adjust size of population
   }
 }
 
 void draw() {
+  if(pop.gen > numOfGen) {
+    int runtime = millis();  //how long takes calculation of one evolution
+    String path = "data/T"+hidden_layers+"x"+hidden_nodes+"m"+int(mutationRate*100)+"G"+numOfGen+"R"+nrun+"bestSnake.csv";
+    saveModel(path);
+    path = "data/T"+hidden_layers+"x"+hidden_nodes+"m"+int(mutationRate*100)+"G"+numOfGen+"R"+nrun+"scores.csv";
+    saveScore(path,runtime);
+    nrun += 1;
+    if(nrun > iteration) {
+    exit();
+    } else {
+    pop = new Population(numOfSnakes);
+    evolution = new ArrayList<Integer>();
+    highscore = 0;
+  }
+  } 
   background(0);
   noFill();
   stroke(255);
@@ -75,7 +101,9 @@ void draw() {
           pop.naturalSelection();
       } else {
           pop.update();
-          pop.show(); 
+          if(showAnimation){
+          pop.show();
+          }
       }
       fill(150);
       textSize(25);
@@ -166,11 +194,67 @@ void fileSelectedIn(File selection) {
   }
 }
 
+void saveModel(String path) {
+Table modelTable = new Table();
+    Snake modelToSave = pop.bestSnake.clone();
+    Matrix[] modelWeights = modelToSave.brain.pull();
+    float[][] weights = new float[modelWeights.length][];
+    for(int i=0; i<weights.length; i++) {
+       weights[i] = modelWeights[i].toArray(); 
+    }
+    for(int i=0; i<weights.length; i++) {
+       modelTable.addColumn("L"+i); 
+    }
+    modelTable.addColumn("Graph");
+    int maxLen = weights[0].length;
+    for(int i=1; i<weights.length; i++) {
+       if(weights[i].length > maxLen) {
+          maxLen = weights[i].length; 
+       }
+    }
+    int g = 0;
+    for(int i=0; i<maxLen; i++) {
+       TableRow newRow = modelTable.addRow();
+       for(int j=0; j<weights.length+1; j++) {
+           if(j == weights.length) {
+             if(g < evolution.size()) {
+                newRow.setInt("Graph",evolution.get(g));
+                g++;
+             }
+           } else if(i < weights[j].length) {
+              newRow.setFloat("L"+j,weights[j][i]); 
+           }
+       }
+    }
+    saveTable(modelTable, path);
+  }
+
+void saveScore(String path, int runTime) {
+Table scoreTable = new Table();
+    scoreTable.addColumn("generation");
+    scoreTable.addColumn("score");
+    scoreTable.addColumn("runtime");
+    TableRow firstRow = scoreTable.addRow();
+       firstRow.setInt("generation", 0);
+       firstRow.setInt("score", 0);
+       firstRow.setInt("runtime", runTime);
+    for(int i=0; i<evolution.size(); i++) {
+      int newscore = evolution.get(i);
+       TableRow newRow = scoreTable.addRow();
+       newRow.setInt("generation", i+1);
+       newRow.setInt("score", newscore);
+    }
+    saveTable(scoreTable, path);
+  }
+
+
 void fileSelectedOut(File selection) {
   if (selection == null) {
     println("Window was closed or the user hit cancel.");
   } else {
     String path = selection.getAbsolutePath();
+    saveModel(path);
+/*
     Table modelTable = new Table();
     Snake modelToSave = pop.bestSnake.clone();
     Matrix[] modelWeights = modelToSave.brain.pull();
@@ -203,7 +287,7 @@ void fileSelectedOut(File selection) {
        }
     }
     saveTable(modelTable, path);
-    
+  */  
   }
 }
 
