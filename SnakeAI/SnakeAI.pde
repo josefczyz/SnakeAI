@@ -14,9 +14,9 @@ boolean seeVision = false;  //see the snakes vision
 boolean modelLoaded = false;
 
 boolean showAnimation = false; //false for computing only mode - must set to true for human play,model show and orginal AI computing
-int numOfGen = 20; //how many generations will be computed
+int numOfGen = 50; //how many generations will be computed
 int numOfSnakes = 2000 ; //how many snajes will one generation contain
-int iteration = 5; //how many calculation of given topology should be made
+int iteration = 20; //how many calculation of given topology should be made
 ArrayList<Integer> scores; //score of each generation in evolution
 ArrayList<Integer> runTimes; //list of each evolution calculations times
 
@@ -70,26 +70,35 @@ void setup() {
 
 void draw() {
   if(!showAnimation) {
-  if(pop.gen > numOfGen-1) {
-    int runtime = millis() - lastRuntime;  //how long takes calculation of one evolution
-    runTimes.add(runtime);
-    String path = "data/T"+hidden_layers+"x"+hidden_nodes+"m"+int(mutationRate*100)+"G"+numOfGen+"R"+nrun+"bestSnake.csv";
-    saveModel(path);
-    path = "data/T"+hidden_layers+"x"+hidden_nodes+"m"+int(mutationRate*100)+"G"+numOfGen+"R"+nrun+"scores.csv";
-    saveScore(path,runtime);
-    nrun += 1;
-    lastRuntime += runtime;
-    if(nrun > iteration) {
-      path = "data/T"+hidden_layers+"x"+hidden_nodes+"m"+int(mutationRate*100)+"G"+numOfGen+"allscores.csv";
-      saveScoresTable(path);
-    exit();
+    if(pop.gen > numOfGen-1) {
+      int runtime = millis() - lastRuntime;  //how long takes calculation of one evolution
+      runTimes.add(runtime);
+      String path = "data/T"+hidden_layers+"x"+hidden_nodes+"m"+int(mutationRate*100)+"G"+numOfGen+"R"+nrun+"bestSnake.csv";
+      saveModel(path);
+      path = "data/T"+hidden_layers+"x"+hidden_nodes+"m"+int(mutationRate*100)+"G"+numOfGen+"R"+nrun+"scores.csv";
+      saveScore(path,runtime);
+      nrun += 1;
+      lastRuntime += runtime;
+      if(nrun > iteration) {
+        path = "data/T"+hidden_layers+"x"+hidden_nodes+"m"+int(mutationRate*100)+"G"+numOfGen+"allscores.csv";
+        saveScoresTable(path);
+        exit();
+      } else {
+        pop = new Population(numOfSnakes);
+        evolution = new ArrayList<Integer>();
+        highscore = 0;
+      }
     } else {
-    pop = new Population(numOfSnakes);
-    evolution = new ArrayList<Integer>();
-    highscore = 0;
+     if(pop.done()) {
+       highscore = pop.bestSnake.score;
+        pop.calculateFitness();
+        pop.naturalSelection();
+      } else {
+          pop.update();
+      }
+    }
   }
-  }
-  }
+   else {
   background(0);
   noFill();
   stroke(255);
@@ -114,9 +123,7 @@ void draw() {
           pop.naturalSelection();
       } else {
           pop.update();
-          if(showAnimation){
           pop.show();
-          }
       }
       fill(150);
       textSize(25);
@@ -155,6 +162,7 @@ void draw() {
     graphButton.show();
     loadButton.show();
     saveButton.show();
+  }
   }
 
 }
