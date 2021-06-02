@@ -1,3 +1,33 @@
+Project SnakeAI was orginaly developed by Greer Viau https://github.com/greerviau/SnakeAI.
+This is an extension to automatize of learning process with different topologies and genethics variations and then to automaticaly save the trained NN configurations, scores and times needed for training.
+Various configurations trained by this project can be found here: https://github.com/josefczyz/snakeAIstatistics
+They can be used in both SnakeAI projects for replay. They are compatible.
+
+## New variables and functionality
+SnakeAI.pde modifications
+
+int numOfGen = 50; //how many generations will be computed
+
+int numOfSnakes = 2000; //how many snakes will one generation contain
+
+int iteration = 20; //how many calculation of given topology should be done - evolutions
+
+ArrayList<Integer> scores; //score of each generation in evolution
+  
+ArrayList<Integer> runTimes; //list of each evolution calculations times
+  
+boolean showAnimation = false; //false for computing only mode - must be set to true for human play,model show and orginal AI computing
+  
+boolean brainShow = false; //false to not show neural network drawing when best snake is replayed
+  
+new methods to save scores
+  
+void saveScore(String path, int runTime)
+
+void saveScoresTable(String path)
+
+## Original readme by Green Viau 
+
 # SnakeAI
 
 ## Download and Run
