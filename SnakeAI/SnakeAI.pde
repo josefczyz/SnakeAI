@@ -14,6 +14,7 @@ boolean seeVision = false;  //see the snakes vision
 boolean modelLoaded = false;
 
 boolean showAnimation = false; //false for computing only mode - must set to true for human play,model show and orginal AI computing
+boolean brainShow = false; //false to not show neural network drawing when best snake is replayed
 int numOfGen = 50; //how many generations will be computed
 int numOfSnakes = 2000 ; //how many snajes will one generation contain
 int iteration = 20; //how many calculation of given topology should be made
@@ -141,7 +142,9 @@ void draw() {
       model.think();
       model.move();
       model.show();
+      if (brainShow) {
       model.brain.show(0,0,360,790,model.vision, model.decision);
+      }
       if(model.dead) {
         Snake newmodel = new Snake();
         newmodel.brain = model.brain.clone();
@@ -203,7 +206,7 @@ void fileSelectedIn(File selection) {
     evolution = new ArrayList<Integer>();
     int g = 0;
     int genscore = modelTable.getInt(g,"Graph");
-    while(genscore != 0) {
+    while((genscore != 0) & (g<modelTable.getRowCount()-1)) {
        evolution.add(genscore);
        g++;
        genscore = modelTable.getInt(g,"Graph");
